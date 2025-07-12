@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recommendations - Bot Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> Bot Dashboard</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Overview</a></li>
+                <li><a href="/users" class="nav-link"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="/payments" class="nav-link"><i class="fas fa-credit-card"></i> Payments</a></li>
+                <li><a href="/plans" class="nav-link"><i class="fas fa-tags"></i> Plans</a></li>
+                <li><a href="/ai-recommendations" class="nav-link active"><i class="fas fa-brain"></i> AI Recommendations</a></li>
+                <li><a href="/analytics" class="nav-link"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="/system" class="nav-link"><i class="fas fa-cog"></i> System</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h1><i class="fas fa-brain"></i> AI Recommendations</h1>
+                <div class="header-actions">
+                    <button onclick="generateRecommendations()" class="btn btn-primary">
+                        <i class="fas fa-magic"></i> Generate New Recommendations
+                    </button>
+                    <button onclick="refreshData()" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Dashboard Overview -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="total-recommendations">0</div>
+                        <div class="stat-label">Total Recommendations</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="pending-recommendations">0</div>
+                        <div class="stat-label">Pending Actions</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="high-priority-count">0</div>
+                        <div class="stat-label">High Priority</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="accuracy-score">85%</div>
+                        <div class="stat-label">AI Accuracy</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Controls -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label for="type-filter">Filter by Type:</label>
+                    <select id="type-filter" onchange="filterRecommendations()">
+                        <option value="">All Types</option>
+                        <option value="moderation">Moderation</option>
+                        <option value="engagement">Engagement</option>
+                        <option value="security">Security</option>
+                        <option value="performance">Performance</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="severity-filter">Filter by Severity:</label>
+                    <select id="severity-filter" onchange="filterRecommendations()">
+                        <option value="">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="status-filter">Filter by Status:</label>
+                    <select id="status-filter" onchange="filterRecommendations()">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="implemented">Implemented</option>
+                        <option value="dismissed">Dismissed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Recommendations List -->
+            <div class="recommendations-section">
+                <h2>AI Recommendations</h2>
+                <div id="recommendations-container">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading recommendations...
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Metrics -->
+            <div class="metrics-section">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>Detection Rate</h3>
+                        <div class="metric-value">92%</div>
+                        <div class="metric-description">Accuracy of pattern detection</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>False Positive Rate</h3>
+                        <div class="metric-value">8%</div>
+                        <div class="metric-description">Incorrect recommendations</div>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Implementation Rate</h3>
+                        <div class="metric-value">73%</div>
+                        <div class="metric-description">Recommendations acted upon</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Recommendation Detail Modal -->
+    <div id="recommendation-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Recommendation Details</h2>
+                <span class="close" onclick="closeModal('recommendation-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="modal-content">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+                <div class="modal-actions">
+                    <button onclick="updateRecommendationStatus('implemented')" class="btn btn-success">
+                        <i class="fas fa-check"></i> Mark as Implemented
+                    </button>
+                    <button onclick="updateRecommendationStatus('dismissed')" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Dismiss
+                    </button>
+                    <button onclick="closeModal('recommendation-modal')" class="btn btn-secondary">
+                        <i class="fas fa-cancel"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/ai-recommendations.js"></script>
+</body>
+</html>

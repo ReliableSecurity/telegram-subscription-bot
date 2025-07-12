@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Setup Guide - Telegram Subscription Bot</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> Bot Dashboard</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="/dashboard" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a></li>
+                    <li><a href="/setup" class="nav-link active">
+                        <i class="fas fa-cogs"></i> Setup Guide
+                    </a></li>
+                    <li><a href="#" class="nav-link" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Bot Setup Guide</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="togglePasswordModal()">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+            </div>
+
+            <div class="setup-content">
+                <div class="setup-card">
+                    <h2><i class="fas fa-rocket"></i> Getting Started</h2>
+                    <p>Welcome to the Telegram Subscription Bot setup guide. Follow these steps to get your bot running:</p>
+                    
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Create Your Bot with BotFather</h3>
+                                <p>Open Telegram and search for <code>@BotFather</code></p>
+                                <div class="code-block">
+                                    <p>Send these commands:</p>
+                                    <code>/newbot</code><br>
+                                    <small>Follow the prompts to create your bot</small>
+                                </div>
+                                <p>Save the bot token - you'll need it for configuration.</p>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Configure Environment</h3>
+                                <p>Set up your bot configuration:</p>
+                                <div class="env-example">
+                                    <p>Add these to your .env file:</p>
+                                    <pre>TELEGRAM_BOT_TOKEN=your_bot_token_here
+YOOMONEY_TOKEN=xxx
+BTC_ADDRESS=1xxx
+ETH_ADDRESS=0xxx
+USDT_ADDRESS=0xxx</pre>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Add Bot to Groups/Channels</h3>
+                                <p>To use the bot in groups:</p>
+                                <ol>
+                                    <li>Go to your group/channel</li>
+                                    <li>Click on the group name</li>
+                                    <li>Select "Add Administrator"</li>
+                                    <li>Add your bot</li>
+                                    <li>Grant necessary permissions</li>
+                                </ol>
+                                <div class="permissions-info">
+                                    <h4>Required Permissions:</h4>
+                                    <ul>
+                                        <li>✅ Delete messages</li>
+                                        <li>✅ Ban users</li>
+                                        <li>✅ Pin messages</li>
+                                        <li>✅ Change group info</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h3>Test Your Setup</h3>
+                                <p>Send these commands to your bot:</p>
+                                <div class="test-commands">
+                                    <code>/start</code> - Welcome message<br>
+                                    <code>/plans</code> - View subscription plans<br>
+                                    <code>/setup</code> - Setup instructions<br>
+                                    <code>/addbot</code> - How to add bot to groups
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-card">
+                    <h2><i class="fas fa-cog"></i> Configuration</h2>
+                    <div class="config-section">
+                        <h3>Environment Variables</h3>
+                        <p>Make sure these are set in your .env file:</p>
+                        <div class="env-vars">
+                            <div class="env-var">
+                                <strong>TELEGRAM_BOT_TOKEN</strong>
+                                <span class="env-status" id="telegram-status">✅ Set</span>
+                            </div>
+                            <div class="env-var">
+                                <strong>DATABASE_URL</strong>
+                                <span class="env-status" id="database-status">✅ Set</span>
+                            </div>
+                            <div class="env-var">
+                                <strong>STRIPE_TOKEN</strong>
+                                <span class="env-status" id="stripe-status">⚠️ Not Set</span>
+                            </div>
+                            <div class="env-var">
+                                <strong>YOOMONEY_TOKEN</strong>
+                                <span class="env-status" id="yoomoney-status">⚠️ Not Set</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Bot Commands</h3>
+                        <p>Set these commands in BotFather using <code>/setcommands</code>:</p>
+                        <div class="code-block">
+                            <pre>start - Welcome message
+help - Show help
+plans - View subscription plans
+myplan - Check current plan
+subscribe - Subscribe to a plan
+cancel - Cancel subscription
+history - Payment history
+crypto - Pay with cryptocurrency
+setup - Setup instructions
+addbot - How to add bot to group</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setup-card">
+                    <h2><i class="fas fa-question-circle"></i> Troubleshooting</h2>
+                    <div class="troubleshooting">
+                        <div class="issue">
+                            <h4>Bot not responding</h4>
+                            <p>Check that:</p>
+                            <ul>
+                                <li>Bot token is correct</li>
+                                <li>Bot is running without errors</li>
+                                <li>Network connectivity is working</li>
+                            </ul>
+                        </div>
+                        <div class="issue">
+                            <h4>Payments not working</h4>
+                            <p>Verify:</p>
+                            <ul>
+                                <li>Payment provider tokens are set</li>
+                                <li>Test mode vs live mode settings</li>
+                                <li>Currency configurations</li>
+                            </ul>
+                        </div>
+                        <div class="issue">
+                            <h4>Database issues</h4>
+                            <p>Check:</p>
+                            <ul>
+                                <li>Database URL is correct</li>
+                                <li>Database is accessible</li>
+                                <li>Migrations ran successfully</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Change Modal -->
+    <div id="password-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="close-btn" onclick="togglePasswordModal()">&times;</button>
+            </div>
+            <form id="password-form">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Current Password:</label>
+                        <input type="password" id="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password:</label>
+                        <input type="password" id="new-password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="togglePasswordModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Check auth
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            window.location.href = '/';
+        }
+
+        function togglePasswordModal() {
+            const modal = document.getElementById('password-modal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.getElementById('password-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('authToken', data.token);
+                    alert('Password changed successfully!');
+                    togglePasswordModal();
+                } else {
+                    alert(data.error || 'Failed to change password');
+                }
+            } catch (error) {
+                alert('Error changing password');
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - Bot Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> Bot Dashboard</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Overview</a></li>
+                <li><a href="/users" class="nav-link active"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="/payments" class="nav-link"><i class="fas fa-credit-card"></i> Payments</a></li>
+                <li><a href="/plans" class="nav-link"><i class="fas fa-tags"></i> Plans</a></li>
+                <li><a href="/ai-recommendations" class="nav-link"><i class="fas fa-brain"></i> AI Recommendations</a></li>
+                <li><a href="/analytics" class="nav-link"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="/system" class="nav-link"><i class="fas fa-cog"></i> System</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h1><i class="fas fa-users"></i> Users Management</h1>
+                <div class="header-actions">
+                    <button onclick="refreshData()" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Subscription</th>
+                            <th>Groups</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr>
+                            <td colspan="6" class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Loading users...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Get token from URL or localStorage
+        let currentToken = new URLSearchParams(window.location.search).get('token') || localStorage.getItem('authToken');
+        
+        if (currentToken && !localStorage.getItem('authToken')) {
+            localStorage.setItem('authToken', currentToken);
+        }
+
+        function fetchWithToken(url, options = {}) {
+            const tokenUrl = url.includes('?') ? `${url}&token=${currentToken}` : `${url}?token=${currentToken}`;
+            const headers = {
+                'Authorization': `Bearer ${currentToken}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            return fetch(tokenUrl, { ...options, headers });
+        }
+
+        async function loadUsers() {
+            try {
+                const response = await fetchWithToken('/api/users');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('authToken');
+                        window.location.href = '/?error=auth';
+                        return;
+                    }
+                    throw new Error('Failed to fetch users');
+                }
+                
+                const data = await response.json();
+                displayUsers(data.users || []);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('users-table-body').innerHTML = 
+                    '<tr><td colspan="6" class="error">Ошибка загрузки пользователей</td></tr>';
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('users-table-body');
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>
+                        <div class="user-info">
+                            <strong>${user.first_name || 'N/A'} ${user.last_name || ''}</strong>
+                            <br>
+                            <small>@${user.username || 'no_username'}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${user.is_active ? 'status-active' : 'status-inactive'}">
+                            ${user.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="subscription-info">
+                            ${user.subscription_plan || 'Free'}
+                        </span>
+                    </td>
+                    <td>${user.groups_count || 0}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewUser(${user.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewUser(userId) {
+            alert(`User details for ID: ${userId} (functionality to be implemented)`);
+        }
+
+        function refreshData() {
+            loadUsers();
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/';
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+        });
+    </script>
+</body>
+</html>

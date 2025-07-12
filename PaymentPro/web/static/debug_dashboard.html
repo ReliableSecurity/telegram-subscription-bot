@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Debug Dashboard</h1>
+    
+    <div id="auth-status" class="status info">Проверка авторизации...</div>
+    <div id="token-status" class="status info">Проверка токена...</div>
+    <div id="api-status" class="status info">Проверка API...</div>
+    
+    <h2>Данные пользователя:</h2>
+    <pre id="user-data">Загрузка...</pre>
+    
+    <h2>Отладочная информация:</h2>
+    <pre id="debug-info">Инициализация...</pre>
+
+    <script>
+        let debugInfo = [];
+        
+        function addDebugInfo(message) {
+            debugInfo.push(new Date().toISOString() + ': ' + message);
+            document.getElementById('debug-info').textContent = debugInfo.join('\n');
+            console.log(message);
+        }
+        
+        function updateStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'status ' + type;
+        }
+        
+        async function debugAuthentication() {
+            try {
+                addDebugInfo('Начало отладки авторизации');
+                
+                // Проверка токена в localStorage
+                let authToken = localStorage.getItem('authToken');
+                addDebugInfo('Токен из localStorage: ' + (authToken ? authToken.substring(0, 20) + '...' : 'отсутствует'));
+                
+                // Проверка токена в URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlToken = urlParams.get('token');
+                if (urlToken) {
+                    addDebugInfo('Токен из URL найден: ' + urlToken.substring(0, 20) + '...');
+                    localStorage.setItem('authToken', urlToken);
+                    authToken = urlToken;
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+                
+                if (!authToken) {
+                    updateStatus('auth-status', 'Токен не найден', 'error');
+                    updateStatus('token-status', 'Необходима авторизация', 'error');
+                    return;
+                }
+                
+                updateStatus('auth-status', 'Токен найден', 'success');
+                updateStatus('token-status', 'Токен: ' + authToken.substring(0, 20) + '...', 'success');
+                
+                // Тестирование API
+                addDebugInfo('Тестирование API /api/user/profile');
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                addDebugInfo('Статус ответа: ' + response.status);
+                addDebugInfo('Ответ OK: ' + response.ok);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    addDebugInfo('Ошибка API: ' + errorText);
+                    updateStatus('api-status', 'Ошибка API: ' + response.status, 'error');
+                    document.getElementById('user-data').textContent = 'Ошибка: ' + errorText;
+                    return;
+                }
+                
+                const userData = await response.json();
+                addDebugInfo('Данные пользователя получены успешно');
+                updateStatus('api-status', 'API работает корректно', 'success');
+                document.getElementById('user-data').textContent = JSON.stringify(userData, null, 2);
+                
+            } catch (error) {
+                addDebugInfo('Исключение: ' + error.message);
+                updateStatus('api-status', 'Ошибка: ' + error.message, 'error');
+                document.getElementById('user-data').textContent = 'Ошибка: ' + error.message;
+            }
+        }
+        
+        // Запуск отладки при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            addDebugInfo('DOM загружен, запуск отладки');
+            debugAuthentication();
+        });
+    </script>
+</body>
+</html>

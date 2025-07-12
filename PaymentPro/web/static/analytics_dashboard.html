@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аналитика и модерация - Telegram Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .content-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            margin: 2px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .severity-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .severity-1 { background: #d4edda; color: #155724; }
+        .severity-2 { background: #fff3cd; color: #856404; }
+        .severity-3 { background: #f8d7da; color: #721c24; }
+
+        .activity-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .activity-join { background: #d4edda; color: #155724; }
+        .activity-leave { background: #f8d7da; color: #721c24; }
+        .activity-message { background: #cce5ff; color: #004085; }
+        .activity-like { background: #fff3cd; color: #856404; }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-chart-bar"></i>
+                Аналитика и модерация
+            </h1>
+            <a href="/user-dashboard" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Назад в личный кабинет
+            </a>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('analytics')">
+                <i class="fas fa-chart-line"></i> Аналитика
+            </button>
+            <button class="nav-tab" onclick="showTab('forbidden-words')">
+                <i class="fas fa-ban"></i> Запрещенные слова
+            </button>
+            <button class="nav-tab" onclick="showTab('group-stats')">
+                <i class="fas fa-users"></i> Статистика групп
+            </button>
+        </div>
+
+        <!-- Аналитика -->
+        <div id="analytics" class="content-section active">
+            <h2>
+                <i class="fas fa-chart-line"></i>
+                Активность пользователей
+            </h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-user-plus"></i></div>
+                    <div class="value" id="total-joins">0</div>
+                    <div class="label">Всего подписок</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-user-minus"></i></div>
+                    <div class="value" id="total-leaves">0</div>
+                    <div class="label">Всего отписок</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-comments"></i></div>
+                    <div class="value" id="total-messages">0</div>
+                    <div class="label">Всего сообщений</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon"><i class="fas fa-heart"></i></div>
+                    <div class="value" id="total-likes">0</div>
+                    <div class="label">Всего лайков</div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Дата</th>
+                            <th>Тип</th>
+                            <th>Группа</th>
+                            <th>Сообщение</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-table">
+                        <tr>
+                            <td colspan="4" class="loading">Загрузка данных...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Запрещенные слова -->
+        <div id="forbidden-words" class="content-section">
+            <h2>
+                <i class="fas fa-ban"></i>
+                Управление запрещенными словами
+            </h2>
+            
+            <button class="btn btn-success" onclick="showAddWordModal()">
+                <i class="fas fa-plus"></i> Добавить слово
+            </button>
+
+            <div class="table-container" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Слово</th>
+                            <th>Категория</th>
+                            <th>Серьезность</th>
+                            <th>Создано</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="words-table">
+                        <tr>
+                            <td colspan="5" class="loading">Загрузка данных...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Статистика групп -->
+        <div id="group-stats" class="content-section">
+            <h2>
+                <i class="fas fa-users"></i>
+                Статистика групп
+            </h2>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Группа</th>
+                            <th>Участники</th>
+                            <th>Сообщения</th>
+                            <th>Лайки</th>
+                            <th>Подписки</th>
+                            <th>Отписки</th>
+                            <th>Обновлено</th>
+                        </tr>
+                    </thead>
+                    <tbody id="groups-table">
+                        <tr>
+                            <td colspan="7" class="loading">Загрузка данных...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для добавления слова -->
+    <div id="wordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Добавить запрещенное слово</h2>
+            <form id="word-form">
+                <div class="form-group">
+                    <label for="word">Слово:</label>
+                    <input type="text" id="word" name="word" required>
+                </div>
+                <div class="form-group">
+                    <label for="category">Категория:</label>
+                    <select id="category" name="category">
+                        <option value="general">Общие</option>
+                        <option value="spam">Спам</option>
+                        <option value="commerce">Коммерция</option>
+                        <option value="abuse">Оскорбления</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="severity">Серьезность:</label>
+                    <select id="severity" name="severity">
+                        <option value="1">Низкая</option>
+                        <option value="2">Средняя</option>
+                        <option value="3">Высокая</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <button type="button" class="btn btn-danger" onclick="closeModal()">Отмена</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        let currentEditId = null;
+
+        // Проверка авторизации
+        if (!authToken) {
+            window.location.href = '/';
+        }
+
+        // Переключение вкладок
+        function showTab(tabName) {
+            // Скрыть все секции
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Убрать активность у всех табов
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Показать выбранную секцию
+            document.getElementById(tabName).classList.add('active');
+            
+            // Активировать соответствующий таб
+            event.target.classList.add('active');
+            
+            // Загрузить данные для секции
+            loadSectionData(tabName);
+        }
+
+        // Загрузка данных для секции
+        function loadSectionData(section) {
+            switch(section) {
+                case 'analytics':
+                    loadUserActivity();
+                    break;
+                case 'forbidden-words':
+                    loadForbiddenWords();
+                    break;
+                case 'group-stats':
+                    loadGroupStatistics();
+                    break;
+            }
+        }
+
+        // Загрузка активности пользователей
+        async function loadUserActivity() {
+            try {
+                const response = await fetch('/api/user/activity', {
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load user activity');
+                }
+
+                const activities = await response.json();
+                displayUserActivity(activities);
+                updateActivityStats(activities);
+            } catch (error) {
+                console.error('Error loading user activity:', error);
+                document.getElementById('activity-table').innerHTML = 
+                    '<tr><td colspan="4" class="error">Ошибка загрузки данных</td></tr>';
+            }
+        }
+
+        // Отображение активности пользователей
+        function displayUserActivity(activities) {
+            const tableBody = document.getElementById('activity-table');
+            
+            if (activities.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="loading">Данные отсутствуют</td></tr>';
+                return;
+            }
+
+            let html = '';
+            activities.forEach(activity => {
+                const date = new Date(activity.created_at).toLocaleString();
+                const activityClass = `activity-${activity.activity_type}`;
+                
+                html += `
+                    <tr>
+                        <td>${date}</td>
+                        <td><span class="activity-type ${activityClass}">${activity.activity_type}</span></td>
+                        <td>${activity.chat_title || 'Неизвестно'}</td>
+                        <td>${activity.message_text || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        // Обновление статистики активности
+        function updateActivityStats(activities) {
+            const stats = {
+                joins: 0,
+                leaves: 0,
+                messages: 0,
+                likes: 0
+            };
+
+            activities.forEach(activity => {
+                switch(activity.activity_type) {
+                    case 'join':
+                        stats.joins++;
+                        break;
+                    case 'leave':
+                        stats.leaves++;
+                        break;
+                    case 'message':
+                        stats.messages++;
+                        break;
+                    case 'like':
+                        stats.likes++;
+                        break;
+                }
+            });
+
+            document.getElementById('total-joins').textContent = stats.joins;
+            document.getElementById('total-leaves').textContent = stats.leaves;
+            document.getElementById('total-messages').textContent = stats.messages;
+            document.getElementById('total-likes').textContent = stats.likes;
+        }
+
+        // Загрузка запрещенных слов
+        async function loadForbiddenWords() {
+            try {
+                const response = await fetch('/api/analytics/forbidden-words', {
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load forbidden words');
+                }
+
+                const words = await response.json();
+                displayForbiddenWords(words);
+            } catch (error) {
+                console.error('Error loading forbidden words:', error);
+                document.getElementById('words-table').innerHTML = 
+                    '<tr><td colspan="5" class="error">Ошибка загрузки данных</td></tr>';
+            }
+        }
+
+        // Отображение запрещенных слов
+        function displayForbiddenWords(words) {
+            const tableBody = document.getElementById('words-table');
+            
+            if (words.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="loading">Слова не найдены</td></tr>';
+                return;
+            }
+
+            let html = '';
+            words.forEach(word => {
+                const createdAt = new Date(word.created_at).toLocaleDateString();
+                const severityClass = `severity-${word.severity}`;
+                
+                html += `
+                    <tr>
+                        <td><strong>${word.word}</strong></td>
+                        <td>${word.category}</td>
+                        <td><span class="severity-badge ${severityClass}">${word.severity}</span></td>
+                        <td>${createdAt}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editWord(${word.id}, '${word.word}', '${word.category}', ${word.severity})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteWord(${word.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        // Загрузка статистики групп
+        async function loadGroupStatistics() {
+            try {
+                const response = await fetch('/api/user/group-statistics', {
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load group statistics');
+                }
+
+                const groups = await response.json();
+                displayGroupStatistics(groups);
+            } catch (error) {
+                console.error('Error loading group statistics:', error);
+                document.getElementById('groups-table').innerHTML = 
+                    '<tr><td colspan="7" class="error">Ошибка загрузки данных</td></tr>';
+            }
+        }
+
+        // Отображение статистики групп
+        function displayGroupStatistics(groups) {
+            const tableBody = document.getElementById('groups-table');
+            
+            if (groups.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="loading">Группы не найдены</td></tr>';
+                return;
+            }
+
+            let html = '';
+            groups.forEach(group => {
+                const lastUpdated = new Date(group.last_updated).toLocaleDateString();
+                
+                html += `
+                    <tr>
+                        <td><strong>${group.chat_title}</strong></td>
+                        <td>${group.total_members}</td>
+                        <td>${group.total_messages}</td>
+                        <td>${group.total_likes}</td>
+                        <td>${group.total_joins}</td>
+                        <td>${group.total_leaves}</td>
+                        <td>${lastUpdated}</td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+
+        // Модальное окно для добавления слова
+        function showAddWordModal() {
+            document.getElementById('modal-title').textContent = 'Добавить запрещенное слово';
+            document.getElementById('word-form').reset();
+            currentEditId = null;
+            document.getElementById('wordModal').style.display = 'block';
+        }
+
+        // Редактирование слова
+        function editWord(id, word, category, severity) {
+            document.getElementById('modal-title').textContent = 'Редактировать запрещенное слово';
+            document.getElementById('word').value = word;
+            document.getElementById('category').value = category;
+            document.getElementById('severity').value = severity;
+            currentEditId = id;
+            document.getElementById('wordModal').style.display = 'block';
+        }
+
+        // Закрытие модального окна
+        function closeModal() {
+            document.getElementById('wordModal').style.display = 'none';
+            currentEditId = null;
+        }
+
+        // Сохранение слова
+        document.getElementById('word-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const wordData = {
+                word: formData.get('word'),
+                category: formData.get('category'),
+                severity: parseInt(formData.get('severity'))
+            };
+
+            try {
+                let response;
+                if (currentEditId) {
+                    // Редактирование
+                    response = await fetch(`/api/analytics/forbidden-words/${currentEditId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': authToken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(wordData)
+                    });
+                } else {
+                    // Добавление
+                    response = await fetch('/api/analytics/forbidden-words', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': authToken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(wordData)
+                    });
+                }
+
+                if (!response.ok) {
+                    throw new Error('Failed to save word');
+                }
+
+                closeModal();
+                loadForbiddenWords();
+                showNotification('Слово успешно сохранено!', 'success');
+            } catch (error) {
+                console.error('Error saving word:', error);
+                showNotification('Ошибка сохранения слова', 'error');
+            }
+        });
+
+        // Удаление слова
+        async function deleteWord(id) {
+            if (!confirm('Вы уверены, что хотите удалить это слово?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/analytics/forbidden-words/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to delete word');
+                }
+
+                loadForbiddenWords();
+                showNotification('Слово успешно удалено!', 'success');
+            } catch (error) {
+                console.error('Error deleting word:', error);
+                showNotification('Ошибка удаления слова', 'error');
+            }
+        }
+
+        // Показ уведомлений
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = type;
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1001';
+            notification.style.padding = '10px 20px';
+            notification.style.borderRadius = '5px';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Загрузка данных при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserActivity();
+        });
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('wordModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

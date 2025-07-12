@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление группами - Telegram Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #45a049;
+        }
+
+        .nav-btn.secondary {
+            background: #2196F3;
+        }
+
+        .nav-btn.secondary:hover {
+            background: #1976D2;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-group-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .add-group-form input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+
+        .add-group-form button {
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .add-group-form button:hover {
+            background: #45a049;
+        }
+
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .group-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .group-card.channel {
+            border-left-color: #2196F3;
+        }
+
+        .group-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .group-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .group-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status.inactive {
+            background: #f44336;
+            color: white;
+        }
+
+        .status.pending {
+            background: #FF9800;
+            color: white;
+        }
+
+        .instructions {
+            background: #E3F2FD;
+            border: 1px solid #2196F3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .groups-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .add-group-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-users"></i> Управление группами и каналами</h1>
+            <div class="navigation">
+                <a href="/user-dashboard" class="nav-btn"><i class="fas fa-home"></i> Личный кабинет</a>
+                <a href="/analytics" class="nav-btn secondary"><i class="fas fa-chart-bar"></i> Аналитика</a>
+                <button class="nav-btn" onclick="showInstructions()"><i class="fas fa-question-circle"></i> Инструкции</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-plus"></i> Добавить группу/канал</h2>
+            <div class="add-group-form">
+                <input type="text" id="groupName" placeholder="Название группы/канала">
+                <input type="text" id="groupId" placeholder="ID группы/канала или @username">
+                <select id="groupType">
+                    <option value="group">Группа</option>
+                    <option value="channel">Канал</option>
+                </select>
+                <button onclick="addGroup()"><i class="fas fa-plus"></i> Добавить</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-list"></i> Мои группы и каналы</h2>
+            <div class="groups-grid" id="groupsGrid">
+                <!-- Группы будут загружены здесь -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для инструкций -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeInstructions()">&times;</span>
+            <h2>Как добавить бота в группу/канал</h2>
+            <div class="instructions">
+                <h3>Для групп:</h3>
+                <ol>
+                    <li>Откройте группу в Telegram</li>
+                    <li>Нажмите на название группы вверху</li>
+                    <li>Выберите "Добавить участников"</li>
+                    <li>Найдите бота по имени: <strong>@jnhghyjuiokmuhbgbot</strong></li>
+                    <li>Добавьте бота в группу</li>
+                    <li>Сделайте бота администратором с правами:</li>
+                    <ul>
+                        <li>Удаление сообщений</li>
+                        <li>Блокировка пользователей</li>
+                        <li>Изменение информации</li>
+                        <li>Закрепление сообщений</li>
+                    </ul>
+                </ol>
+                
+                <h3>Для каналов:</h3>
+                <ol>
+                    <li>Откройте канал в Telegram</li>
+                    <li>Нажмите на название канала вверху</li>
+                    <li>Выберите "Управление"</li>
+                    <li>Нажмите "Администраторы"</li>
+                    <li>Добавьте бота: <strong>@jnhghyjuiokmuhbgbot</strong></li>
+                    <li>Дайте боту необходимые права администратора</li>
+                </ol>
+                
+                <h3>Получение ID группы/канала:</h3>
+                <ol>
+                    <li>Добавьте бота в группу/канал</li>
+                    <li>Напишите в группе/канале: <code>/id</code></li>
+                    <li>Бот покажет ID группы/канала</li>
+                    <li>Скопируйте ID и вставьте в форму выше</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            const urlParams = new URLSearchParams(window.location.search);
+            authToken = urlParams.get('token');
+            if (authToken) {
+                localStorage.setItem('authToken', authToken);
+            }
+        }
+
+        if (!authToken) {
+            window.location.href = '/';
+        }
+
+        // Загрузка групп при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGroups();
+        });
+
+        // Показать инструкции
+        function showInstructions() {
+            document.getElementById('instructionsModal').style.display = 'block';
+        }
+
+        // Закрыть инструкции
+        function closeInstructions() {
+            document.getElementById('instructionsModal').style.display = 'none';
+        }
+
+        // Добавить группу
+        async function addGroup() {
+            const name = document.getElementById('groupName').value;
+            const groupId = document.getElementById('groupId').value;
+            const type = document.getElementById('groupType').value;
+
+            if (!name || !groupId) {
+                alert('Заполните все поля');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/groups', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        chat_id: groupId,
+                        type: type
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Группа/канал добавлена успешно!');
+                    document.getElementById('groupName').value = '';
+                    document.getElementById('groupId').value = '';
+                    loadGroups();
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка: ' + error.error);
+                }
+            } catch (error) {
+                alert('Ошибка при добавлении группы/канала');
+                console.error('Error:', error);
+            }
+        }
+
+        // Загрузить список групп
+        async function loadGroups() {
+            try {
+                const response = await fetch('/api/groups', {
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const groups = await response.json();
+                    displayGroups(groups);
+                } else {
+                    document.getElementById('groupsGrid').innerHTML = '<p>Ошибка загрузки групп</p>';
+                }
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                document.getElementById('groupsGrid').innerHTML = '<p>Ошибка загрузки групп</p>';
+            }
+        }
+
+        // Отобразить группы
+        function displayGroups(groups) {
+            const grid = document.getElementById('groupsGrid');
+            
+            if (groups.length === 0) {
+                grid.innerHTML = '<p>У вас пока нет добавленных групп или каналов</p>';
+                return;
+            }
+
+            let html = '';
+            groups.forEach(group => {
+                const typeIcon = group.type === 'channel' ? 'fas fa-bullhorn' : 'fas fa-users';
+                const statusClass = group.is_active ? 'active' : 'inactive';
+                const statusText = group.is_active ? 'Активна' : 'Неактивна';
+
+                html += `
+                    <div class="group-card ${group.type}">
+                        <h3><i class="${typeIcon}"></i> ${group.name}</h3>
+                        <div class="group-info">
+                            <p><strong>ID:</strong> ${group.chat_id}</p>
+                            <p><strong>Тип:</strong> ${group.type === 'channel' ? 'Канал' : 'Группа'}</p>
+                            <p><strong>Статус:</strong> <span class="status ${statusClass}">${statusText}</span></p>
+                        </div>
+                        <div class="group-stats">
+                            <div class="stat">
+                                <div class="stat-value">${group.member_count || 0}</div>
+                                <div class="stat-label">Участников</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${group.message_count || 0}</div>
+                                <div class="stat-label">Сообщений</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${group.violations_count || 0}</div>
+                                <div class="stat-label">Нарушений</div>
+                            </div>
+                        </div>
+                        <div class="group-actions">
+                            <button class="btn btn-primary" onclick="viewStats(${group.id})">
+                                <i class="fas fa-chart-line"></i> Статистика
+                            </button>
+                            <button class="btn btn-success" onclick="testBot(${group.id})">
+                                <i class="fas fa-robot"></i> Тест бота
+                            </button>
+                            <button class="btn btn-danger" onclick="removeGroup(${group.id})">
+                                <i class="fas fa-trash"></i> Удалить
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        // Просмотр статистики группы
+        function viewStats(groupId) {
+            window.open(`/analytics?group=${groupId}`, '_blank');
+        }
+
+        // Тестирование бота в группе
+        async function testBot(groupId) {
+            try {
+                const response = await fetch(`/api/groups/${groupId}/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Тестовое сообщение отправлено в группу/канал');
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка тестирования: ' + error.error);
+                }
+            } catch (error) {
+                alert('Ошибка при тестировании бота');
+                console.error('Error:', error);
+            }
+        }
+
+        // Удаление группы
+        async function removeGroup(groupId) {
+            if (!confirm('Вы уверены, что хотите удалить эту группу/канал?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/groups/${groupId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': authToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Группа/канал удалена');
+                    loadGroups();
+                } else {
+                    const error = await response.json();
+                    alert('Ошибка удаления: ' + error.error);
+                }
+            } catch (error) {
+                alert('Ошибка при удалении группы/канала');
+                console.error('Error:', error);
+            }
+        }
+
+        // Закрытие модального окна при клике вне его
+        window.onclick = function(event) {
+            const modal = document.getElementById('instructionsModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

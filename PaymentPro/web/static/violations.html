@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нарушения - Subscription Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.danger {
+            background: #e53e3e;
+        }
+
+        .nav-btn.danger:hover {
+            background: #c53030;
+        }
+
+        .violations-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .violation-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+
+        .violation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .violation-type {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .violation-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .violation-user {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .violation-reason {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-shield-alt"></i> Нарушения</h1>
+            <div class="navigation">
+                <a href="/user-dashboard" class="nav-btn"><i class="fas fa-home"></i> Главная</a>
+                <a href="/group-selector" class="nav-btn"><i class="fas fa-users"></i> Группы</a>
+                <button class="nav-btn danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Выйти</button>
+            </div>
+        </div>
+
+        <div class="violations-container">
+            <div id="violations-content">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Загрузка нарушений...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('auth_token');
+
+        // Проверяем токен из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            authToken = tokenFromUrl;
+            localStorage.setItem('auth_token', authToken);
+        }
+
+        if (!authToken) {
+            window.location.href = '/';
+        }
+
+        async function loadViolations() {
+            try {
+                const response = await fetch('/api/moderation/violations', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load violations');
+                }
+
+                const data = await response.json();
+                const violations = data.violations || [];
+                displayViolations(violations);
+            } catch (error) {
+                console.error('Error loading violations:', error);
+                document.getElementById('violations-content').innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Ошибка загрузки нарушений: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function displayViolations(violations) {
+            const container = document.getElementById('violations-content');
+            
+            if (violations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Нет нарушений</h3>
+                        <p>Пока нет зарегистрированных нарушений в ваших группах</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const violationsHTML = violations.map(violation => `
+                <div class="violation-item">
+                    <div class="violation-header">
+                        <div class="violation-type">${getViolationTypeText(violation.violation_type)}</div>
+                        <div class="violation-date">${new Date(violation.created_at).toLocaleDateString('ru-RU')}</div>
+                    </div>
+                    <div class="violation-user">
+                        Пользователь: ${violation.first_name} ${violation.username ? `(@${violation.username})` : ''}
+                    </div>
+                    <div class="violation-reason">${violation.violation_reason}</div>
+                    ${violation.message_text ? `<div class="violation-message">Сообщение: "${violation.message_text}"</div>` : ''}
+                </div>
+            `).join('');
+
+            container.innerHTML = violationsHTML;
+        }
+
+        function getViolationTypeText(type) {
+            switch (type) {
+                case 'warning': return '⚠️ Предупреждение';
+                case 'temp_ban': return '⏰ Временный бан';
+                case 'permanent_ban': return '🚫 Постоянный бан';
+                default: return '❓ Неизвестно';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/';
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadViolations();
+        });
+    </script>
+</body>
+</html>

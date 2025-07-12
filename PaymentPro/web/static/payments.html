@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payments - Bot Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-robot"></i> Bot Dashboard</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Overview</a></li>
+                <li><a href="/users" class="nav-link"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="/payments" class="nav-link active"><i class="fas fa-credit-card"></i> Payments</a></li>
+                <li><a href="/plans" class="nav-link"><i class="fas fa-tags"></i> Plans</a></li>
+                <li><a href="/ai-recommendations" class="nav-link"><i class="fas fa-brain"></i> AI Recommendations</a></li>
+                <li><a href="/analytics" class="nav-link"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="/system" class="nav-link"><i class="fas fa-cog"></i> System</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button onclick="logout()" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="content-header">
+                <h1><i class="fas fa-credit-card"></i> Payments Management</h1>
+                <div class="header-actions">
+                    <button onclick="refreshData()" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Payments Table -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payments-table-body">
+                        <tr>
+                            <td colspan="7" class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Loading payments...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Get token from URL or localStorage
+        let currentToken = new URLSearchParams(window.location.search).get('token') || localStorage.getItem('authToken');
+        
+        if (currentToken && !localStorage.getItem('authToken')) {
+            localStorage.setItem('authToken', currentToken);
+        }
+
+        function fetchWithToken(url, options = {}) {
+            const tokenUrl = url.includes('?') ? `${url}&token=${currentToken}` : `${url}?token=${currentToken}`;
+            const headers = {
+                'Authorization': `Bearer ${currentToken}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            return fetch(tokenUrl, { ...options, headers });
+        }
+
+        async function loadPayments() {
+            try {
+                const response = await fetchWithToken('/api/payments');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        localStorage.removeItem('authToken');
+                        window.location.href = '/?error=auth';
+                        return;
+                    }
+                    throw new Error('Failed to fetch payments');
+                }
+                
+                const data = await response.json();
+                displayPayments(data.payments || []);
+            } catch (error) {
+                console.error('Error loading payments:', error);
+                document.getElementById('payments-table-body').innerHTML = 
+                    '<tr><td colspan="7" class="error">Ошибка загрузки платежей</td></tr>';
+            }
+        }
+
+        function displayPayments(payments) {
+            const tbody = document.getElementById('payments-table-body');
+            if (payments.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty">No payments found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = payments.map(payment => `
+                <tr>
+                    <td>${payment.id}</td>
+                    <td>
+                        <div class="user-info">
+                            <strong>${payment.user_name || 'N/A'}</strong>
+                            <br>
+                            <small>ID: ${payment.user_id}</small>
+                        </div>
+                    </td>
+                    <td>
+                        <strong>$${(payment.amount_cents / 100).toFixed(2)}</strong>
+                        <br>
+                        <small>${payment.currency}</small>
+                    </td>
+                    <td>${payment.plan_name || 'N/A'}</td>
+                    <td>
+                        <span class="status-badge ${getStatusClass(payment.status)}">
+                            ${payment.status}
+                        </span>
+                    </td>
+                    <td>
+                        ${new Date(payment.created_at).toLocaleDateString()}
+                        <br>
+                        <small>${new Date(payment.created_at).toLocaleTimeString()}</small>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewPayment(${payment.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusClass(status) {
+            const statusMap = {
+                'completed': 'status-completed',
+                'pending': 'status-pending',
+                'failed': 'status-failed',
+                'cancelled': 'status-cancelled'
+            };
+            return statusMap[status] || 'status-unknown';
+        }
+
+        function viewPayment(paymentId) {
+            alert(`Payment details for ID: ${paymentId} (functionality to be implemented)`);
+        }
+
+        function refreshData() {
+            loadPayments();
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/';
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPayments();
+        });
+    </script>
+</body>
+</html>

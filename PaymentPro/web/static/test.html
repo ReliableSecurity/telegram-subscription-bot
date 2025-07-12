@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test API</title>
+</head>
+<body>
+    <h1>API Test Page</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <button onclick="testProfile()">Test Profile</button>
+    <button onclick="testUserDashboard()">Test User Dashboard</button>
+    <button onclick="testLocalStorage()">Test LocalStorage</button>
+    <div id="results"></div>
+
+    <script>
+        let testToken = '';
+        
+        async function testLogin() {
+            const results = document.getElementById('results');
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'user_1712174719',
+                        password: 'TestPass999'
+                    })
+                });
+                
+                const data = await response.json();
+                testToken = data.token;
+                localStorage.setItem('authToken', data.token);
+                results.innerHTML = `<p>Login Response: ${JSON.stringify(data)}</p>`;
+                console.log('Login successful:', data);
+            } catch (error) {
+                results.innerHTML = `<p>Login Error: ${error.message}</p>`;
+                console.error('Login error:', error);
+            }
+        }
+        
+        async function testProfile() {
+            const results = document.getElementById('results');
+            if (!testToken) {
+                results.innerHTML = '<p>Please login first</p>';
+                return;
+            }
+            
+            try {
+                console.log('Testing profile with token:', testToken);
+                const response = await fetch('/api/user/profile', {
+                    headers: {
+                        'Authorization': testToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Profile response status:', response.status);
+                const data = await response.json();
+                results.innerHTML += `<p>Profile Response: ${JSON.stringify(data)}</p>`;
+                console.log('Profile successful:', data);
+            } catch (error) {
+                results.innerHTML += `<p>Profile Error: ${error.message}</p>`;
+                console.error('Profile error:', error);
+            }
+        }
+        
+        async function testUserDashboard() {
+            const results = document.getElementById('results');
+            if (!testToken) {
+                results.innerHTML = '<p>Please login first</p>';
+                return;
+            }
+            
+            try {
+                window.location.href = '/user-dashboard';
+            } catch (error) {
+                results.innerHTML += `<p>Dashboard Error: ${error.message}</p>`;
+                console.error('Dashboard error:', error);
+            }
+        }
+        
+        function testLocalStorage() {
+            const results = document.getElementById('results');
+            const token = localStorage.getItem('authToken');
+            results.innerHTML += `<p>LocalStorage Token: ${token || 'Not found'}</p>`;
+            console.log('LocalStorage token:', token);
+        }
+    </script>
+</body>
+</html>
